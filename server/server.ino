@@ -1,7 +1,6 @@
 #include "esp_camera.h"
 #include <WiFi.h>
 
-
 const char* ssid = "telenet-A862E";
 const char* password = "N4xvFUusGBMX";
 
@@ -29,6 +28,8 @@ void setup() {
   Serial.println("Server started");
   Serial.println(WiFi.localIP());
 
+  // Set GPIO 15 as output
+  pinMode(15, OUTPUT);
 }
 
 void loop() {
@@ -72,24 +73,18 @@ void loop() {
 
       // Free the frame buffer
       esp_camera_fb_return(fb);
-    }
-  } else if (req.indexOf("/signal?300") != -1) {
-    // Set GPIO 15 to HIGH if a face is detected
-    Serial.println("Face detected!");
-    pinMode(15, OUTPUT);
-    digitalWrite(15, HIGH);
 
-    // Send an HTTP response
-    client.println("HTTP/1.1 200 OK");
-    client.println("Content-Type: text/html");
-    client.println();
-    client.println("<html><body>Signal received</body></html>");
-  } else {
-    // Send an HTTP response for all other requests
-    client.println("HTTP/1.1 200 OK");
-    client.println("Content-Type: text/html");
-    client.println();
-    client.println("<html><body>Unknown request</body></html>");
+      // Check for any signals from the client
+      if (client.available()) {
+        String signal = client.readStringUntil('\r');
+        Serial.println(signal);
+        if (signal.indexOf("/signal?300") != -1) {
+          // Set GPIO 15 to HIGH if a signal is received
+          Serial.println("Signal received!");
+          digitalWrite(15, HIGH);
+        }
+      }
+    }
   }
 
   // Wait for the client to disconnect
