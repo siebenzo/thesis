@@ -88,10 +88,10 @@ void setup() {
 void loop() {
   // Check if a client has connected
   WiFiClient client = server.available();
-  if (!client) {
+  /*if (!client) {
     return;
   }
-
+*/
   // Wait for the client to send some data
   while (!client.available()) {
     delay(1);
@@ -122,5 +122,5 @@ void loop() {
   }
 
   // Close the connection
-  client.stop();
+  //client.stop();
 }
