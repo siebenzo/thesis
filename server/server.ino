@@ -1,8 +1,8 @@
 #include "esp_camera.h"
 #include <WiFi.h>
 
-const char* ssid = "telenet-A862E";
-const char* password = "N4xvFUusGBMX";
+const char* ssid = "Sabine";
+const char* password = "kitties123";
 
 WiFiServer server(80);
 
