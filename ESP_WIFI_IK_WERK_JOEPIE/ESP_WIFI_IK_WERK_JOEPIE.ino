@@ -61,9 +61,8 @@ void loop()
 {
 
   //SOCKET als je socket wilt zet here dan true
-  if(false)
+  if(true)
   {
-    
     // Read the data sent by the client
   String data = "";
   // Check if a client has connected
