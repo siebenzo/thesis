@@ -3,11 +3,12 @@
 #include "eloquent.h"
 #include <WiFi.h>;
 #include <TimeLib.h>
+#include <esp_heap_caps.h>
 
 
 // Replace with your WiFi credentials
-#define WIFI_SSID "Sabine"
-#define WIFI_PASS "kitties123"
+#define WIFI_SSID "telenet-A862E"
+#define WIFI_PASS "N4xvFUusGBMX"
 #define CAMERA_MODEL_WROVER_KIT
 #include "eloquent/vision/camera/wrover.h"
 
@@ -19,6 +20,7 @@ Eloquent::Esp32cam::Http::LiveFeed feed(cam, 80);
 //WiFiServer server(81);
 WiFiServer server(80);
 WiFiClient client;
+
 
 void setup() {
   Serial.begin(115200);
@@ -54,81 +56,105 @@ void setup() {
   server.begin();
   pinMode(15, OUTPUT);
   pinMode(2, OUTPUT);
-
 }
 
-void loop() 
-{
+void print_memory(){
+    // Get free and minimum free memory
+    size_t freeMem = heap_caps_get_free_size(MALLOC_CAP_8BIT);
+    size_t minFreeMem = heap_caps_get_minimum_free_size(MALLOC_CAP_8BIT);
 
+    // Get total heap memory
+    size_t totalHeapMem = esp_get_free_heap_size();
+
+    // Calculate percentage of memory used by the program
+    float memUsedPercent = 100.0 * (totalHeapMem - freeMem) / totalHeapMem;
+
+    Serial.print("Free Memory: ");
+    Serial.print(freeMem);
+    Serial.print(" bytes, Minimum Free Memory: ");
+    Serial.print(minFreeMem);
+    Serial.print(" bytes, Memory Used: ");
+    Serial.print(memUsedPercent, 2);
+    Serial.println("%");
+    Serial.println("bytes used: " + totalHeapMem - freeMem);
+}
+
+void loop() {
   //SOCKET als je socket wilt zet here dan true
-  if(true)
-  {
+  if(1 == 1) {
     // Read the data sent by the client
-  String data = "";
-  // Check if a client has connected
-  if (client.connected()) {
-    // Read any data that has been sent
-    while (client.available()) {
-      char c = client.read();
-      //Serial.print(c);
-      digitalWrite(15, HIGH);
-      data += c;
-      // Convert the data to an integer
-      int message = data.toInt();
-
-      // Print the received message
-      //Serial.print("Received message: ");
-      //Serial.println(message);
-      if (message == 3) 
-      {  // Turn on the LED
-
-      digitalWrite(2, HIGH);
-      delay(3000);
-      digitalWrite(2, LOW);
-
-      }
-      
-    }
-
-    // If the client has disconnected, close the connection
-    if (!client.connected()) {
-            client.stop();
-            digitalWrite(15, LOW);
-          }
-  } 
-  else {
-    // If no client is connected, wait for a new connection
-    client = server.available();
-  }
-  }
-
-  //HTTP REQUEST
-  else{
-      WiFiClient client = server.available();
-
-  if (client) {
-    Serial.println("New client connected.");
-
-    while (client.connected()) {
-      // Read the data sent by the client
-      String data = "";
+    String data = "";
+    // Check if a client has connected
+    if (client.connected()) {
       // Read any data that has been sent
+      //Serial.println("client connnected!");
       while (client.available()) {
         char c = client.read();
+        //Serial.print(c);
+        digitalWrite(15, HIGH);
         data += c;
+        // Convert the data to an integer
+        int message = data.toInt();
+        print_memory();
+
+        // Print the received message
+        //Serial.print("Received message: ");
+        //Serial.println(message);
+        if (message == 3) {
+          Serial.println("Message received -> memory used:");
+          print_memory();
+          // Turn on the LED
+          digitalWrite(2, HIGH);
+          delay(3000);
+          digitalWrite(2, LOW);
+        }
       }
-      // Parse the request for "data" parameter
-      if (data.indexOf("/?data=3") != -1) {
-        // Turn on the LED for 3 seconds
-        digitalWrite(2, HIGH);
-        delay(3000);
-        digitalWrite(2, LOW);
+
+      // If the client has disconnected, close the connection
+      if (!client.connected()) {
+        client.stop();
+        digitalWrite(15, LOW);
+        Serial.println("Client disconnected");
+        
       }
+    } else {
+      // If no client is connected, wait for a new connection
+      client = server.available();
+      //Serial.println("Waiting for client");
     }
-    // Close the connection
-    client.stop();
-    digitalWrite(15, LOW);
-    Serial.println("Client disconnected.");
   }
+
+
+
+  //HTTP REQUEST
+  else {
+    WiFiClient client = server.available();
+
+    if (client) {
+      Serial.println("New client connected.");
+      print_memory();
+      while (client.connected()) {
+        // Read the data sent by the client
+        String data = "";
+        // Read any data that has been sent
+        while (client.available()) {
+          char c = client.read();
+          data += c;
+        }
+        // Parse the request for "data" parameter
+        if (data.indexOf("/?data=3") != -1) {
+          Serial.println("Message received -> memory used:");
+          print_memory();
+          // Turn on the LED for 3 seconds
+          digitalWrite(2, HIGH);
+          delay(500);
+          digitalWrite(2, LOW);
+        }
+      }
+      // Close the connection
+      client.stop();
+      digitalWrite(15, LOW);
+      Serial.println("Client disconnected.");
+    }
   }
 }
