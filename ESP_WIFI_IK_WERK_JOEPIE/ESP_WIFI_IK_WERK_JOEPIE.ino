@@ -11,7 +11,10 @@
 #define WIFI_PASS "N4xvFUusGBMX"
 #define CAMERA_MODEL_WROVER_KIT
 #include "eloquent/vision/camera/wrover.h"
+float mem;
 
+int mem_array[50];
+int idx = 0;
 
 // 80 is the port to listen to
 // You can change it to whatever you want, 80 is the default for HTTP
@@ -58,7 +61,7 @@ void setup() {
   pinMode(2, OUTPUT);
 }
 
-void print_memory(){
+float print_memory(){
     // Get free and minimum free memory
     size_t freeMem = heap_caps_get_free_size(MALLOC_CAP_8BIT);
     size_t minFreeMem = heap_caps_get_minimum_free_size(MALLOC_CAP_8BIT);
@@ -68,41 +71,43 @@ void print_memory(){
 
     // Calculate percentage of memory used by the program
     float memUsedPercent = 100.0 * (totalHeapMem - freeMem) / totalHeapMem;
+    float memUsed = totalHeapMem - freeMem;
 
-    Serial.print("Free Memory: ");
+    /*Serial.print("Free Memory: ");
     Serial.print(freeMem);
     Serial.print(" bytes, Minimum Free Memory: ");
     Serial.print(minFreeMem);
     Serial.print(" bytes, Memory Used: ");
     Serial.print(memUsedPercent, 2);
     Serial.println("%");
-    Serial.println("bytes used: " + totalHeapMem - freeMem);
+    Serial.println(" bytes, Memory used: ");
+    Serial.println(memUsed);*/
+    Serial.println(" bytes, freeheap: ");
+    Serial.println(totalHeapMem);
+    return memUsed;
 }
 
 void loop() {
+
   //SOCKET als je socket wilt zet here dan true
-  if(1 == 1) {
-    // Read the data sent by the client
+  if(1 == 0) {
     String data = "";
-    // Check if a client has connected
     if (client.connected()) {
-      // Read any data that has been sent
-      //Serial.println("client connnected!");
       while (client.available()) {
         char c = client.read();
         //Serial.print(c);
         digitalWrite(15, HIGH);
         data += c;
-        // Convert the data to an integer
+        
         int message = data.toInt();
-        print_memory();
-
-        // Print the received message
-        //Serial.print("Received message: ");
-        //Serial.println(message);
+        
         if (message == 3) {
+          //involving memory 
           Serial.println("Message received -> memory used:");
-          print_memory();
+          
+          mem_array[idx] = print_memory();
+          idx ++;
+          client.print(mem);
           // Turn on the LED
           digitalWrite(2, HIGH);
           delay(3000);
@@ -115,6 +120,7 @@ void loop() {
         client.stop();
         digitalWrite(15, LOW);
         Serial.println("Client disconnected");
+        
         
       }
     } else {
@@ -132,7 +138,6 @@ void loop() {
 
     if (client) {
       Serial.println("New client connected.");
-      print_memory();
       while (client.connected()) {
         // Read the data sent by the client
         String data = "";
@@ -144,7 +149,9 @@ void loop() {
         // Parse the request for "data" parameter
         if (data.indexOf("/?data=3") != -1) {
           Serial.println("Message received -> memory used:");
-          print_memory();
+          mem_array[idx] = print_memory();
+          Serial.println(mem_array[idx]);
+          idx ++;
           // Turn on the LED for 3 seconds
           digitalWrite(2, HIGH);
           delay(500);
